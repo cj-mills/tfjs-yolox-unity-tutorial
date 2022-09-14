@@ -20,5 +20,5 @@ public static class WebGLPluginJS
     public static extern void UpdateOutputArray(float[] output_data, int size);
 
     [DllImport("__Internal")]
-    public static extern int PerformInference(byte[] image_data, int size, int width, int height);
+    public static extern bool PerformInference(byte[] image_data, int size, int width, int height);
 }

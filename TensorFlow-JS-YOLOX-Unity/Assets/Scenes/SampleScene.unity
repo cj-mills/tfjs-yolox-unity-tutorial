@@ -2549,7 +2549,7 @@ MonoBehaviour:
   displayBoundingBoxes: 1
   displayProposalCount: 1
   displayFPS: 1
-  textColor: {r: 1, g: 0, b: 0, a: 1}
+  textColor: {r: 1, g: 1, b: 0, a: 1}
   fontScale: 50
   fpsRefreshRate: 0.2
   useWebcamToggle: {fileID: 8870819754565200065}
@@ -2557,11 +2557,6 @@ MonoBehaviour:
   modelDropdown: {fileID: 538824367}
   backendDropdown: {fileID: 96823215}
   tfjsModelsDir: TFJSModels
-  normalizationStatsList:
-  - {fileID: 4900000, guid: 328c7cc5f8fc71c43a18fc5a2a14b5bc, type: 3}
-  - {fileID: 4900000, guid: 5ea6299a0bc3806479628ba0dcc679b0, type: 3}
-  - {fileID: 4900000, guid: 23622ecec383a8d47baaf1b04191527f, type: 3}
-  - {fileID: 4900000, guid: 7ea59e1485ef2b441a5f000b465a9eeb, type: 3}
 --- !u!1 &1608524355
 GameObject:
   m_ObjectHideFlags: 0

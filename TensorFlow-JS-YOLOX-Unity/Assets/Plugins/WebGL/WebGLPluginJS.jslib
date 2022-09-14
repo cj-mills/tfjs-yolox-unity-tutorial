@@ -51,20 +51,24 @@ var plugin = {
    PerformInference: function (image_data, size, width, height) {
       if (typeof this.model == 'undefined') {
          console.log("Model not defined yet");
-         return -1;
+         return false;
       }
 
       // Initialize an array with the raw image data
       const uintArray = new Uint8ClampedArray(buffer, image_data, size, width, height);
-      uintArray.reverse();
 
       // Channels-last order
       const [input_array] = new Array(new Array());
-      for (let i = 0; i < uintArray.length; i += 3) {
-         input_array.push(((uintArray[i] / 255.0) - this.mean[0]) / this.std_dev[0]);
-         input_array.push(((uintArray[i + 1] / 255.0) - this.mean[1]) / this.std_dev[1]);
-         input_array.push(((uintArray[i + 2] / 255.0) - this.mean[2]) / this.std_dev[2]);
+
+      for (let row = height - 1; row >= 0; row--) {
+         let slice = uintArray.slice(row * width * 3, (row * width * 3) + (width * 3));
+         for (let col = 0; col < slice.length; col += 3) {
+            input_array.push(((slice[col + 0] / 255.0) - this.mean[0]) / this.std_dev[0]);
+            input_array.push(((slice[col + 1] / 255.0) - this.mean[1]) / this.std_dev[1]);
+            input_array.push(((slice[col + 2] / 255.0) - this.mean[2]) / this.std_dev[2]);
+         }
       }
+
       const float32Data = Float32Array.from(input_array);
       const shape = [1, height, width, 3];
 
@@ -78,7 +82,7 @@ var plugin = {
             this.output_array.fill(0);
          }
       })
-      return 0;
+      return true;
    },
 }
 

@@ -130,8 +130,6 @@ public class YOLOXTFJS : MonoBehaviour
     [Header("TFJS")]
     [Tooltip("The name of the TFJS models folder")]
     public string tfjsModelsDir = "TFJSModels";
-    [Tooltip("A list json files containing the normalization stats for available models")]
-    public TextAsset[] normalizationStatsList;
 
     // List of available webcam devices
     private WebCamDevice[] webcamDevices;
@@ -242,6 +240,8 @@ public class YOLOXTFJS : MonoBehaviour
     float[] output_array;
     float scale_x;
     float scale_y;
+
+    bool isInitialized;
 
     /// <summary>
     /// Initialize the selected webcam device
@@ -505,7 +505,7 @@ public class YOLOXTFJS : MonoBehaviour
             float height = objectInfoArray[i].height * minImgScale;
 
             // Mirror bounding box across screen
-            if (mirrorScreen && !useWebcam)
+            if (mirrorScreen && useWebcam)
             {
                 x0 = screen.transform.localScale.x - x0 - width;
             }
@@ -719,7 +719,7 @@ public class YOLOXTFJS : MonoBehaviour
             output_array = new float[output_size];
             WebGLPluginJS.UpdateOutputArray(output_array, output_size);
             Debug.Log($"Updating output array to {output_size}");
-            Debug.Log($"Input Dims: {inputDims[0]}x{inputDims[1]}");
+            Debug.Log($"Input Dims: {inputTextureCPU.width}x{inputTextureCPU.height}");
         }
 
         if (printDebugMessages) Debug.Log($"Input Dims: {inputTextureGPU.width}x{inputTextureGPU.height}");
@@ -730,14 +730,24 @@ public class YOLOXTFJS : MonoBehaviour
         // Download pixel data from GPU to CPU
         RenderTexture.active = inputTextureGPU;
         inputTextureCPU.ReadPixels(new Rect(0, 0, inputTextureGPU.width, inputTextureGPU.height), 0, 0);
+        //inputTextureCPU.ReadPixels(new Rect(inputTextureGPU.width, inputTextureGPU.height, 
+        //    -inputTextureGPU.width, -inputTextureGPU.height), 0, 0);
         inputTextureCPU.Apply();
+
+        //byte[] raw_bytes = inputTextureCPU.GetRawTextureData();
+        //Array.Reverse(raw_bytes);
+
+        //for (int row = 0; row < inputTextureCPU.height; row++)
+        //{
+        //    Array.Reverse(raw_bytes, row * inputTextureCPU.width * 3, inputTextureCPU.width * 3);
+        //}
 
         int width = inputTextureCPU.width;
         int height = inputTextureCPU.height;
         int size = width * height * 3;
-        int return_val = WebGLPluginJS.PerformInference(inputTextureCPU.GetRawTextureData(), size, width, height);
+        isInitialized = WebGLPluginJS.PerformInference(inputTextureCPU.GetRawTextureData(), size, width, height);
 
-        if (return_val == -1)
+        if (isInitialized == false)
         {
             // Release the input texture
             RenderTexture.ReleaseTemporary(inputTextureGPU);
@@ -910,7 +920,7 @@ public class YOLOXTFJS : MonoBehaviour
         Rect slot2 = new Rect(10, style.fontSize * 1.5f, 500, 500);
 
         string content = $"Objects Detected: {numObjects}";
-        if (displayProposalCount) GUI.Label(slot1, new GUIContent(content), style);
+        if (displayProposalCount) GUI.Label(slot1, new GUIContent(isInitialized ? content : "Loading Model..."), style);
 
         // Update framerate value
         if (Time.unscaledTime > fpsTimer)
