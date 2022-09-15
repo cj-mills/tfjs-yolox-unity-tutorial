@@ -1,36 +1,36 @@
 // Define plugin functions
-var plugin = {
+let plugin = {
 
    // Add additional JavaScript dependencies to the html page
    GetExternalJS: function () {
 
       // Add base TensorFlow.js dependencies
-      var tfjs_script = document.createElement("script");
+      let tfjs_script = document.createElement("script");
       tfjs_script.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.20.0/dist/tf.min.js";
       document.head.appendChild(tfjs_script);
 
       // Add custom utility functions
-      var script = document.createElement("script");
+      let script = document.createElement("script");
       script.src = "./StreamingAssets/utils.js";
       document.head.appendChild(script);
    },
 
    // Set the TFJS inference backend
    SetTFJSBackend: function (backend) {
-      var backend_str = UTF8ToString(backend);
+      let backend_str = UTF8ToString(backend);
       try {
          tf.setBackend(backend_str).then(() => { });
       } catch (error) {
          tf.setBackend('webgl');
       }
-      console.log(`Inference Backend: ${tf.getBackend()}`)
+      console.log(`Inference Backend: ${tf.getBackend()}`);
    },
 
    // Load a TFJS model
    InitTFJSModel: async function (model_path, mean, std_dev) {
 
       // Convert bytes to the text
-      var model_path_str = UTF8ToString(model_path);
+      let model_path_str = UTF8ToString(model_path);
 
       this.model = await tf.loadGraphModel(model_path_str, { fromTFHub: false });
 
