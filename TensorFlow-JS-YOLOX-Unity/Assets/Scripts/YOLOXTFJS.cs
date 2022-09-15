@@ -81,7 +81,7 @@ public class YOLOXTFJS : MonoBehaviour
 
     [Header("Data Processing")]
     [Tooltip("The target minimum model input dimensions")]
-    public int targetDim = 216;
+    public int targetDim = 224;
 
     [Header("Output Processing")]
     [Tooltip("A json file containing the colormaps for object classes")]
@@ -180,8 +180,8 @@ public class YOLOXTFJS : MonoBehaviour
 
     // A class for reading in normalization stats from a JSON file
     class NormalizationStats { public float[] mean; public float[] std; }
-    float[] mean = new float[3];
-    float[] std = new float[3];
+    float[] mean = new float[] {0.485f, 0.456f, 0.406f };
+    float[] std = new float[] { 0.229f, 0.224f, 0.225f };
 
     [System.Serializable]
     class ModelData { public string name; public string path; }
@@ -523,7 +523,7 @@ public class YOLOXTFJS : MonoBehaviour
 
 
 
-    List<GridAndStride> generate_grid_strides(int height, int width, int[] strides)
+    List<GridAndStride> GenerateGridStrides(int height, int width, int[] strides)
     {
         List<GridAndStride> grid_strides = new List<GridAndStride>();
 
@@ -549,7 +549,7 @@ public class YOLOXTFJS : MonoBehaviour
         return grid_strides;
     }
 
-    List<Object> generate_yolox_proposals(float[] model_output, int proposal_length, List<GridAndStride> grid_strides, float bbox_conf_thresh= 0.3f)
+    List<Object> GenerateYOLOXProposals(float[] model_output, int proposal_length, List<GridAndStride> grid_strides, float bbox_conf_thresh= 0.3f)
     {
         List<Object> proposals = new List<Object>();
 
@@ -615,7 +615,7 @@ public class YOLOXTFJS : MonoBehaviour
         return proposals;
     }
 
-    float calc_union_area(Object a, Object b)
+    float CalcUnionArea(Object a, Object b)
     {
         var x = Mathf.Min(a.x0, b.x0);
         var y = Mathf.Min(a.y0, b.y0);
@@ -624,7 +624,7 @@ public class YOLOXTFJS : MonoBehaviour
         return w * h;
     }
     
-    float calc_inter_area(Object a, Object b)
+    float CalcInterArea(Object a, Object b)
     {
         var x = Mathf.Max(a.x0, b.x0);
         var y = Mathf.Max(a.y0, b.y0);
@@ -633,7 +633,7 @@ public class YOLOXTFJS : MonoBehaviour
         return w * h;
     }
 
-    List<int> nms_sorted_boxes(List<Object> proposals, float nms_thresh= 0.45f)
+    List<int> NMSSortedBoxes(List<Object> proposals, float nms_thresh= 0.45f)
     {
         List<int> proposal_indices = new List<int>();
 
@@ -648,10 +648,10 @@ public class YOLOXTFJS : MonoBehaviour
                 var b = proposals[j];
 
                 // Calculate the area where the two object bounding boxes overlap
-                var inter_area = calc_inter_area(a, b);
+                var inter_area = CalcInterArea(a, b);
 
                 // Calculate the union area of both bounding boxes
-                var union_area = calc_union_area(a, b);
+                var union_area = CalcUnionArea(a, b);
 
                 // Ignore object proposals that overlap selected objects too much
                 if (inter_area / union_area > nms_thresh) keep = false;
@@ -713,7 +713,7 @@ public class YOLOXTFJS : MonoBehaviour
         {
             inputTextureCPU = new Texture2D(inputDims.x, inputDims.y, TextureFormat.RGB24, false);
             grid_strides = new List<GridAndStride>();
-            grid_strides = generate_grid_strides(inputDims[1], inputDims[0], strides);
+            grid_strides = GenerateGridStrides(inputDims[1], inputDims[0], strides);
 
             int output_size = grid_strides.Count * (colors.Length + 5);
             output_array = new float[output_size];
@@ -730,17 +730,7 @@ public class YOLOXTFJS : MonoBehaviour
         // Download pixel data from GPU to CPU
         RenderTexture.active = inputTextureGPU;
         inputTextureCPU.ReadPixels(new Rect(0, 0, inputTextureGPU.width, inputTextureGPU.height), 0, 0);
-        //inputTextureCPU.ReadPixels(new Rect(inputTextureGPU.width, inputTextureGPU.height, 
-        //    -inputTextureGPU.width, -inputTextureGPU.height), 0, 0);
         inputTextureCPU.Apply();
-
-        //byte[] raw_bytes = inputTextureCPU.GetRawTextureData();
-        //Array.Reverse(raw_bytes);
-
-        //for (int row = 0; row < inputTextureCPU.height; row++)
-        //{
-        //    Array.Reverse(raw_bytes, row * inputTextureCPU.width * 3, inputTextureCPU.width * 3);
-        //}
 
         int width = inputTextureCPU.width;
         int height = inputTextureCPU.height;
@@ -754,9 +744,9 @@ public class YOLOXTFJS : MonoBehaviour
             return;
         }
 
-        List<Object> proposals = generate_yolox_proposals(output_array, colors.Length + 5, grid_strides, 0.5f);
+        List<Object> proposals = GenerateYOLOXProposals(output_array, colors.Length + 5, grid_strides, minConfidence);
         
-        List<int> proposal_indices = nms_sorted_boxes(proposals);
+        List<int> proposal_indices = NMSSortedBoxes(proposals);
         numObjects = proposal_indices.Count;
         objectInfoArray = new Object[numObjects];
         for(int i=0; i < objectInfoArray.Length; i++)
@@ -807,15 +797,20 @@ public class YOLOXTFJS : MonoBehaviour
 
 
     /// <summary>
+    /// Update the minimum confidence score for keeping bounding box proposals
+    /// </summary>
+    /// <param name="slider"></param>
+    public void UpdateConfidenceThreshold(Slider slider)
+    {
+        minConfidence = slider.value;
+    }
+
+
+    /// <summary>
     /// 
     /// </summary>
     public void UpdateTFJSModel()
     {
-        //string modelName = modelNames[modelDropdown.value];
-
-        mean = new float[] {0.485f, 0.456f, 0.406f };
-        std = new float[] { 0.229f, 0.224f, 0.225f };
-
         WebGLPluginJS.InitTFJSModel(modelPaths[modelDropdown.value], mean, std);
     }
 
