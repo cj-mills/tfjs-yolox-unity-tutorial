@@ -3,7 +3,7 @@
 
 
 ## Tutorial Links
-
+- [In-Browser Object Detection for Unity with TensorFlow.js](https://christianjmills.com/posts/tfjs-yolox-unity-tutorial/): Create a TensorFlow.js plugin for the Unity game engine to perform object detection with a YOLOX model. 
 
 
 
