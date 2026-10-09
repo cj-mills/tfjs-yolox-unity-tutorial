@@ -43,3 +43,10 @@
 | two_up_inverted         | ![two_up_inverted](./images/two_up_inverted.jpg) |
 </details>
 
+<!-- relocated-posts:start (projected by the relocate verb; never edit by hand) -->
+## Retired posts
+
+The posts that accompanied this repository were retired from [christianjmills.com](https://christianjmills.com) and now live here:
+
+- [Using TensorFlow.js for In-Browser Object Detection in Unity](retired-post/tfjs-yolox-unity-tutorial/README.md) (2022-10-16)
+<!-- relocated-posts:end -->
